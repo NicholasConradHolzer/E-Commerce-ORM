@@ -1,39 +1,88 @@
 const router = require('express').Router();
-const res = require('express/lib/response');
+// const res = require('express/lib/response');
 const { Category, Product } = require('../../models');
 
-// The `/api/categories` endpoint
 
 router.get('/', (req, res) => {
-  // find all categories
-  Category.findAll()
-    .then(productData=>res.json(productData))
+  Category.findAll({
+  include: [{ model: Product}]
+})
+    .then(netProd => res.json(netProd))
+
     .catch(err=> {
       console.log(err);
       res.status(500).json(err);
     });
-  // be sure to include its associated Products
 });
 
-router.get('/:id', (req, res) => {
-  // find one category by its `id` value 
-  Category.findOne({
+router.get('/:id', (req, res) => { 
+  Category.findByPk ({
+    include: [{ model: Product}],
     where: { 
       id: req.params.id
     }
-  // be sure to include its associated Products
+  })
+
+  .then(findProd => res.json(findProd))
+
+  .catch(err => {
+    console.log(err)
+    res.status(500).json(err);
+  })
 });
 
 router.post('/', (req, res) => {
-  // create a new category
+  Category.create({
+    category_name: req.body.category_name
+  })
+
+    .then(makeProd => res.json(makeProd))
+
+    .catch(err => {
+      console.log(err);
+      res.status(500).json(err);
+    });
 });
 
 router.put('/:id', (req, res) => {
-  // update a category by its `id` value
+    Category.update(req.body, {
+      individualHooks: true,
+
+      where: {
+        id: req.params.id
+      }
+  })
+
+    .then(udProd => {
+      if(!udProd[0]) {
+        res.status(404).json({ message: 'No Category found with this ID'});
+        return;
+    }
+    
+    res.json(udProd);
+  })
+
+    .catch(err => {
+      console.log(err);
+      res.status(500).json(err);
+    });
 });
 
 router.delete('/:id', (req, res) => {
-  // delete a category by its `id` value
+  Category.destroy({
+    where: {
+      id: req.params.id
+    }
+  })
+
+    .then((delProd) => {
+      res.json(delProd);
+    })
+
+    .catch(err => {
+      console.log(err);
+      res.status(500).json(err);
+    });
 });
 
 module.exports = router;
