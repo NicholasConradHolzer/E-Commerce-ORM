@@ -13,11 +13,18 @@ router.get('/', (req, res) => {
     ],
 
     include: [
-        {model: Category},{model: Tag}
+        {model: Category,
+        attributes:['id','category_name']},
+        
+        {model: Tag,
+        attributes:['id', 'tag']}
       ]
   })
 
-  .then(productData => res.json(productData))
+  .then(productData =>{ if (!productData) {
+    res.status(404).json({ message: "No Category matches this description"});
+    return;
+  }res.json(productData)})
 
   .catch(err => {
     console.log(err);
@@ -27,9 +34,12 @@ router.get('/', (req, res) => {
 
 
 router.get('/:id', (req, res) => {
-  Product.findByPk(req.params.id, {
-    include: [{ model: Category }, { model: Tag }]
+  Product.findOne(req.params.id, {attributes:['id', 'product_name','price','stock','category_id'],
+    include: [{ model: Category,
+    attributes: ['id', 'category_name']}, { model: Tag,
+    attirbutes: ['id', 'tag_name'] }]
   }).then((productData) => {
+    
     res.json(productData);
   })
   .catch((err) => {

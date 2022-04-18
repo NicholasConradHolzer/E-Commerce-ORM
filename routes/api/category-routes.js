@@ -4,7 +4,7 @@ const { Category, Product } = require('../../models');
 
 router.get('/', (req, res) => {
   Category.findAll({
-    attributes: ['id', 'product_name', 'price', 'stock', 'category_id'],
+    attributes: ['id', 'category_name'],
   include: [ {model: Product,
     attributes: ['id', 'product_name', 'price', 'stock', 'category_id'],}
   ]
@@ -23,15 +23,22 @@ router.get('/', (req, res) => {
 });
 
 router.get('/:id', (req, res) => { 
-  Category.findByPk ({
-    include: [{ model: Product}],
+  Category.findOne ({
     where: { 
       id: req.params.id
-    }
+    },
+    attributes: ['id', 'category_name'],
+    include: [{ model: Product,
+    attributes: ['id', 'product_name', 'price', 'stock', 'category_id']}],
+    
   })
 
-  .then(findProd => res.json(findProd))
-
+  .then((findProd) => {
+    if(!findProd) {res.status(404).json({ 
+      message: 'No Products Match this Description'});
+  return;
+} res.json(findProd)
+  })
   .catch(err => {
     console.log(err)
     res.status(500).json(err);
@@ -52,23 +59,23 @@ router.post('/', (req, res) => {
 });
 
 router.put('/:id', (req, res) => {
-    Category.update(req.body, {
+    Category.update(
+      req.body, {
       individualHooks: true,
 
       where: {
         id: req.params.id
-      }
+      },
+      category_name: req.body.category_name
   })
 
     .then(udProd => {
       if(!udProd[0]) {
-        res.status(404).json({ message: 'No Category found with this ID'});
+        res.status(404).json({ message: 'No Category matches this description'});
         return;
     }
-    
     res.json(udProd);
   })
-
     .catch(err => {
       console.log(err);
       res.status(500).json(err);
@@ -81,8 +88,11 @@ router.delete('/:id', (req, res) => {
       id: req.params.id
     }
   })
-
     .then((delProd) => {
+      if (!delProd) {
+        res.status(404).json({ message: "No Category matches this description"});
+        return;
+      }
       res.json(delProd);
     })
 
