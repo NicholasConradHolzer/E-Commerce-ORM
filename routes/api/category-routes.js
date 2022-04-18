@@ -1,17 +1,24 @@
 const router = require('express').Router();
-// const res = require('express/lib/response');
 const { Category, Product } = require('../../models');
 
 
 router.get('/', (req, res) => {
   Category.findAll({
-  include: [{ model: Product}]
+    attributes: ['id', 'product_name', 'price', 'stock', 'category_id'],
+  include: [ {model: Product,
+    attributes: ['id', 'product_name', 'price', 'stock', 'category_id'],}
+  ]
 })
-    .then(netProd => res.json(netProd))
-
+    .then((netProd) => {
+      if(!netProd) {res.status(404).json({ 
+        message: 'No Caegories Match this Description'});
+    return;
+  }
+     res.json(netProd)
+})
     .catch(err=> {
       console.log(err);
-      res.status(500).json(err);
+      res.status(404).json(err);
     });
 });
 
